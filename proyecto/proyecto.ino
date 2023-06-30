@@ -27,6 +27,9 @@ NewPing distancia(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 Servo servoMotor;
 //llamar las funciones del dht11 con dht.
 
+//VARIABLE DE LA HORA
+int hora = 13;
+
 void setup() {
   Serial.begin(9600);
   WIFInit();
@@ -35,19 +38,22 @@ void setup() {
   pinMode(BOMBAPIN, OUTPUT);
   pinMode(VENTILADORPIN, OUTPUT);
   servoMotor.attach(MOTORPIN,500,2500);
+  servoMotor.write(0);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   verificarTemp();
   verificarNoche();
+  verificarNivelAgua();
+  verificarComida();  
   delay(30000);
 }
 
 
 //FUNCIONES
 void verificarTemp(){
-  float temp = dht.readTemperature;
+  float temp = dht.readTemperature();
   if(temp >= 25){
     digitalWrite(VENTILADORPIN, HIGH);
     digitalWrite(THLEDPIN, LOW);
@@ -66,6 +72,28 @@ void verificarNoche(){
     digitalWrite(DNLEDPIN, LOW);
   }else{
     digitalWrite(DNLEDPIN, HIGH);
+  }
+}
+
+void verificarNivelAgua(){
+  float dis = distancia.ping_cm();
+  Serial.println(dis);
+
+  if(dis <= 4){
+    while(dis <= 4){
+      digitalWrite(BOMBAPIN, HIGH);
+    }
+    digitalWrite(BOMBAPIN, LOW);
+  }else{
+    digitalWrite(BOMBAPIN, LOW);
+  }
+}
+
+void verificarComida(){
+  if(hora >= 13 && hora <14){
+    servoMotor.write(10); //MOVER EL MOTOR 10 GRADOS
+    delay(1000); //1SEG PARA CERRAR LA COMPUERTA DE COMIDA
+    servoMotor.write(0);
   }
 }
 
